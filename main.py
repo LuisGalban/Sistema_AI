@@ -1,31 +1,18 @@
-import os
-from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi import FastAPI
 from dotenv import load_dotenv
+from app.routes import webhook # Importamos nuestro nuevo archivo de rutas
 
 load_dotenv()
-app = FastAPI(title="Backend Modular de IA")
 
-VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "mi_secreto_123")
+app = FastAPI(
+    title="Sistema_AI - Backend Modular",
+    description="Plataforma SaaS multi-empresa para automatización de IA",
+    version="1.0.0"
+)
 
 @app.get("/")
 def inicio():
-    return {"status": "Servidor corriendo en Windows 11"}
+    return {"status": "Servidor corriendo con arquitectura limpia y modular"}
 
-# Endpoint para que Meta valide que tu servidor existe en internet
-@app.get("/webhook")
-def verificar_webhook(
-    hub_mode: str = Query(None, alias="hub.mode"),
-    hub_challenge: int = Query(None, alias="hub.challenge"),
-    hub_verify_token: str = Query(None, alias="hub.verify_token")
-):
-    if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN:
-        return PlainTextResponse(content=str(hub_challenge))
-    raise HTTPException(status_code=403, detail="Token inválido")
-
-# Endpoint donde llegarán las conversaciones de WhatsApp
-@app.post("/webhook")
-async def recibir_mensaje(datos: dict):
-    print("--- MENSAJE ENTRANTE ---")
-    print(datos)
-    return {"status": "recibido"}
+# Inyectamos las rutas del webhook en la aplicación principal
+app.include_router(webhook.router)
